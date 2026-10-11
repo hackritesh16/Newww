@@ -31,6 +31,13 @@ jobs:
           yes | "$SDKM" --licenses > /dev/null || true
           "$SDKM" "platforms;android-34" "build-tools;34.0.0" "platform-tools"
 
+      - name: Extract project zip if the project was uploaded as a .zip
+        run: |
+          if [ -z "$(find . -maxdepth 3 -name gradlew | head -1)" ]; then
+            Z=$(ls ./*.zip 2>/dev/null | head -1)
+            if [ -n "$Z" ]; then echo "Extracting $Z"; mkdir -p _src && unzip -q -o "$Z" -d _src; fi
+          fi
+
       - name: Locate project directory (folder containing gradlew)
         run: |
           GW=$(find . -maxdepth 3 -name gradlew -not -path '*/node_modules/*' | head -1)
