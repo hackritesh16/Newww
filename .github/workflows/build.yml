@@ -31,25 +31,34 @@ jobs:
           yes | "$SDKM" --licenses > /dev/null || true
           "$SDKM" "platforms;android-34" "build-tools;34.0.0" "platform-tools"
 
+      - name: Locate project directory (folder containing gradlew)
+        run: |
+          GW=$(find . -maxdepth 3 -name gradlew -not -path '*/node_modules/*' | head -1)
+          if [ -z "$GW" ]; then echo "gradlew not found in repo"; ls -R | head -50; exit 1; fi
+          echo "PROJECT_DIR=$(dirname "$GW")" >> "$GITHUB_ENV"
+
       - name: Grant execute permission for gradlew
+        working-directory: ${{ env.PROJECT_DIR }}
         run: chmod +x gradlew
 
       - name: Build Debug APK
+        working-directory: ${{ env.PROJECT_DIR }}
         run: ./gradlew assembleDebug --stacktrace
 
       - name: Build Release APK
+        working-directory: ${{ env.PROJECT_DIR }}
         run: ./gradlew assembleRelease --stacktrace
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
           name: nk-player-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          path: ${{ env.PROJECT_DIR }}/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
 
       - name: Upload Release APK
         uses: actions/upload-artifact@v4
         with:
           name: nk-player-release-apk
-          path: app/build/outputs/apk/release/*.apk
+          path: ${{ env.PROJECT_DIR }}/app/build/outputs/apk/release/*.apk
           if-no-files-found: error
